@@ -1,6 +1,6 @@
 -- 1. Все товары, в которых в название есть пометка urgent или название начинается с Animal
 SELECT StockItemName
-FROM Warehouse.StockItems (NOLOCK)
+FROM Warehouse.StockItems 
 WHERE (StockItemName LIKE '%urgent%' 
   OR StockItemName LIKE 'Animal%')
 
@@ -8,9 +8,8 @@ go
 
 -- 2. Поставщиков, у которых не было сделано ни одного заказа 
 SELECT ps.SupplierName, ps.SupplierID 
-FROM Purchasing.Suppliers ps (NOLOCK)
-  LEFT JOIN Purchasing.SupplierTransactions pst (NOLOCK)
-    ON pst.SupplierID = ps.SupplierID
+FROM Purchasing.Suppliers ps 
+  LEFT JOIN Purchasing.SupplierTransactions pst ON pst.SupplierID = ps.SupplierID
 WHERE pst.SupplierID is Null
 
 go
@@ -22,12 +21,11 @@ go
 SELECT sct.CustomerTransactionID,
        DATENAME(mm,sct.TransactionDate) AS MonthName,
        DATEPART(qq,sct.TransactionDate) AS NumberQuarter,
-       DATEPART(mm,sct.TransactionDate)/3 + 1 AS OneThirdOfYear,
+       (DATEPART(mm,sct.TransactionDate)-1)/4 + 1 AS OneThirdOfYear,
        sct.TransactionDate,
        sil.Description
-FROM Sales.CustomerTransactions  sct (NOLOCK)
-  LEFT JOIN Sales.InvoiceLines sil (NOLOCK)
-    ON sct.InvoiceID = sil.InvoiceID
+FROM Sales.CustomerTransactions  sct 
+  LEFT JOIN Sales.InvoiceLines sil ON sct.InvoiceID = sil.InvoiceID
 WHERE sct.FinalizationDate is not Null
   AND (sil.UnitPrice > 100 OR sil.Quantity>20)
 ORDER BY NumberQuarter,OneThirdOfYear,sct.TransactionDate
@@ -39,12 +37,11 @@ go
 
 SELECT DATENAME(mm,sct.TransactionDate) AS MonthName,
        DATEPART(qq,sct.TransactionDate) AS NumberQuarter,
-       DATEPART(mm,sct.TransactionDate)/3 + 1 AS OneThirdOfYear,
+       (DATEPART(mm,sct.TransactionDate)-1)/4 + 1 AS OneThirdOfYear,
        sct.TransactionDate,
        sil.Description
-FROM Sales.CustomerTransactions sct (NOLOCK)
-  LEFT JOIN Sales.InvoiceLines sil (NOLOCK)
-    ON sct.InvoiceID = sil.InvoiceID
+FROM Sales.CustomerTransactions sct 
+  LEFT JOIN Sales.InvoiceLines sil ON sct.InvoiceID = sil.InvoiceID
 WHERE sct.FinalizationDate is not Null
   AND (sil.UnitPrice > 100 OR sil.Quantity>20)
 ORDER BY NumberQuarter,OneThirdOfYear,sct.TransactionDate
@@ -59,34 +56,24 @@ SELECT DISTINCT
        pst.SupplierTransactionID,
        ps.SupplierName,
        ap.FullName
-FROM Purchasing.SupplierTransactions pst (NOLOCK)
-  INNER JOIN Purchasing.Suppliers ps (NOLOCK)
-    ON ps.SupplierID  = pst.SupplierID
-  INNER JOIN Application.DeliveryMethods adm (NOLOCK)
-    ON adm.DeliveryMethodID = ps.DeliveryMethodID
-	AND adm.DeliveryMethodName in ('Road Freight','Post')
-  INNER JOIN Purchasing.PurchaseOrders po (NOLOCK)
-    on pst.PurchaseOrderID  = po.PurchaseOrderID
-  INNER JOIN Application.People ap (NOLOCK)
-    on po.ContactPersonID = ap.PersonID
-WHERE pst.TransactionDate >= '2014-01-01' 
-  AND pst.TransactionDate <= '2014-12-31'
-
+FROM Purchasing.SupplierTransactions pst 
+  INNER JOIN Purchasing.Suppliers ps ON ps.SupplierID  = pst.SupplierID
+  INNER JOIN Application.DeliveryMethods adm ON adm.DeliveryMethodID = ps.DeliveryMethodID
+  INNER JOIN Purchasing.PurchaseOrders po ON pst.PurchaseOrderID  = po.PurchaseOrderID
+  INNER JOIN Application.People ap ON po.ContactPersonID = ap.PersonID
+WHERE YEAR(pst.TransactionDate) = 2014
+  AND adm.DeliveryMethodName in ('Road Freight','Post')
 go
 
 -- 5. 10 последних по дате продаж с именем клиента и именем сотрудника, который оформил заказ.
 SELECT TOP 10 sct.CustomerTransactionID,
               sc.CustomerName,
               ap.FullName
-FROM Sales.CustomerTransactions  sct (NOLOCK)
-  INNER JOIN Sales.Invoices si (NOLOCK)
-    ON si.InvoiceID = sct.InvoiceID
-  INNER JOIN Sales.Orders so (NOLOCK)
-    ON si.OrderID = so.OrderID
-  INNER JOIN Application.People ap (NOLOCK)
-    ON so.SalespersonPersonID = ap.PersonID 
-  INNER JOIN Sales.Customers sc (NOLOCK)
-    ON sc.CustomerID = sct.CustomerID
+FROM Sales.CustomerTransactions  sct 
+  INNER JOIN Sales.Invoices si ON si.InvoiceID = sct.InvoiceID
+  INNER JOIN Sales.Orders so ON si.OrderID = so.OrderID
+  INNER JOIN Application.People ap ON so.SalespersonPersonID = ap.PersonID 
+  INNER JOIN Sales.Customers sc ON sc.CustomerID = sct.CustomerID
 ORDER BY sct.TransactionDate DESC
 
 go
@@ -95,13 +82,9 @@ go
 SELECT DISTINCT
        sc.CustomerID,
        sc.CustomerName,
-	   sc.PhoneNumber	   
-FROM Sales.Invoices si (NOLOCK)
-  INNER JOIN Sales.InvoiceLines sil (NOLOCK)
-    ON si.InvoiceID = sil.InvoiceID
-  INNER JOIN Warehouse.StockItems wsi (NOLOCK)
-    ON sil.StockItemID = wsi.StockItemID
-	AND wsi.StockItemName = 'Chocolate frogs 250g'
-  INNER JOIN Sales.Customers sc (NOLOCK)
-    ON si.CustomerID = sc.CustomerID
-
+       sc.PhoneNumber	   
+FROM Sales.Invoices si 
+  INNER JOIN Sales.InvoiceLines sil ON si.InvoiceID = sil.InvoiceID
+  INNER JOIN Warehouse.StockItems wsi ON sil.StockItemID = wsi.StockItemID
+  INNER JOIN Sales.Customers sc ON si.CustomerID = sc.CustomerID
+WHERE wsi.StockItemName = 'Chocolate frogs 250g'
