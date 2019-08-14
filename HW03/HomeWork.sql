@@ -162,4 +162,4 @@ FROM Sales.Invoices
 WHERE Orders.PickingCompletedWhen IS NOT NULL
 ORDER BY TotalSumm DESC
 
--- Планы запросов Plan0.sqlplan - первоначальный запрос,Plan0.sqlplan - исправленный запрос.
+-- Планы запросов Plan0.sqlplan - первоначальный запрос,Plan1.sqlplan - исправленный запрос.
