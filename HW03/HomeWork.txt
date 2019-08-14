@@ -5,7 +5,6 @@
 */
 --1. Выберите сотрудников, которые являются продажниками, и еще не сделали ни одной продажи.
 
--- с CTE здесь не получится
 SELECT * 
 FROM Application.People ap
 WHERE ap.IsSalesperson = 1
