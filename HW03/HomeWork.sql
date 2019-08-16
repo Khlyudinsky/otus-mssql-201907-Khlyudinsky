@@ -15,6 +15,16 @@ FROM Application.People
 WHERE IsSalesperson = 1
   AND PersonID NOT IN (SELECT SalespersonPersonID FROM Sales.Orders )
 
+WITH SalesPerson AS
+(
+  SELECT PersonID,FullName  
+  FROM Application.People
+  WHERE IsSalesperson = 1
+)
+SELECT * FROM SalesPerson 
+WHERE PersonID NOT IN (SELECT SalespersonPersonID FROM Sales.Orders) 
+
+
 
 --2. Выберите товары с минимальной ценой (подзапросом), 2 варианта подзапроса. 
 
@@ -25,6 +35,14 @@ WHERE UnitPrice = (SELECT MIN(UnitPrice) FROM Warehouse.StockItems)
 SELECT * 
 FROM Warehouse.StockItems 
 WHERE UnitPrice <= ALL(SELECT UnitPrice FROM Warehouse.StockItems)
+
+WITH MinUnitPrice AS
+(
+  SELECT MIN(UnitPrice) AS Price FROM Warehouse.StockItems
+)
+SELECT wsi.* 
+FROM Warehouse.StockItems wsi
+  JOIN MinUnitPrice ON MinUnitPrice.Price = wsi.UnitPrice
 
 
 -- 3. Выберите информацию по клиентам, которые перевели компании 5 максимальных платежей 
@@ -39,9 +57,10 @@ FROM Sales.Customers sc
 
   			  
 WITH CTEtab AS
-(SELECT TOP 5 CustomerID
-              FROM Sales.CustomerTransactions 
-			  ORDER BY TransactionAmount DESC
+(
+  SELECT TOP 5 CustomerID
+  FROM Sales.CustomerTransactions 
+  ORDER BY TransactionAmount DESC
 )
 SELECT DISTINCT sc.CustomerName
 FROM Sales.Customers sc
@@ -50,19 +69,18 @@ FROM Sales.Customers sc
 
 SELECT sc.CustomerName
 FROM Sales.Customers sc
-WHERE sc.CustomerID in (SELECT TOP 5 CustomerID 
-                        FROM Sales.CustomerTransactions sct 
-	                    ORDER BY sct.TransactionAmount DESC
-	                    ) 
-
-
+WHERE sc.CustomerID in (
+                         SELECT TOP 5 CustomerID 
+                         FROM Sales.CustomerTransactions sct 
+	                 ORDER BY sct.TransactionAmount DESC
+	                ) 
 
 --4. Выберите города (ид и название), в которые были доставлены товары, входящие в тройку 
 --   самых дорогих товаров, а также Имя сотрудника, который осуществлял упаковку заказов
 
 SELECT ac.CityID,
        ac.CityName,
-	   isnull(ap.FullName,'') AS PickedByPerson
+       isnull(ap.FullName,'') AS PickedByPerson
 FROM Sales.Orders so
   INNER JOIN Sales.OrderLines sol ON so.OrderID = sol.OrderID
   INNER JOIN Warehouse.StockItems wsi ON sol.StockItemID = wsi.StockItemID
@@ -71,21 +89,23 @@ FROM Sales.Orders so
   INNER JOIN Application.Cities ac ON ac.CityID = sc.DeliveryCityID
   LEFT JOIN Application.People ap ON ap.PersonID = so.PickedByPersonID
 WHERE 
-  wsi.StockItemID in (SELECT top 3 StockItemID
-                      FROM Warehouse.StockItems
-                      ORDER BY UnitPrice DESC
-                      )  
+  wsi.StockItemID in (
+                       SELECT top 3 StockItemID
+                       FROM Warehouse.StockItems
+                       ORDER BY UnitPrice DESC
+                     )  
   AND si.ConfirmedDeliveryTime is not null
 
 
 WITH CTETab AS
-(SELECT top 3 StockItemID
-                      FROM Warehouse.StockItems
-                      ORDER BY UnitPrice DESC
+(
+  SELECT TOP 3 StockItemID
+  FROM Warehouse.StockItems
+  ORDER BY UnitPrice DESC
 )
 SELECT ac.CityID,
        ac.CityName,
-	   isnull(ap.FullName,'') AS PickedByPerson
+       isnull(ap.FullName,'') AS PickedByPerson
 FROM Sales.Orders so
   INNER JOIN Sales.OrderLines sol ON so.OrderID = sol.OrderID
   INNER JOIN CTETab ct ON ct.StockItemID = sol.StockItemID
@@ -137,23 +157,24 @@ sql-оптимизатор выполняет их для каждой стро�
 */
 
 WITH SalesTotals AS
-(SELECT InvoiceId, SUM(Quantity*UnitPrice) AS TotalSumm
- FROM Sales.InvoiceLines
- GROUP BY InvoiceId
- HAVING SUM(Quantity*UnitPrice) > 27000
+(
+  SELECT InvoiceId, SUM(Quantity*UnitPrice) AS TotalSumm
+  FROM Sales.InvoiceLines
+  GROUP BY InvoiceId
+  HAVING SUM(Quantity*UnitPrice) > 27000
 ),
-
 TotalSummForPickedItems AS 
-(SELECT SUM(OrderLines.PickedQuantity*OrderLines.UnitPrice) AS TotalSummForPickedItems,OrderID
- FROM Sales.OrderLines
- GROUP BY OrderID) 
-
+(
+  SELECT SUM(OrderLines.PickedQuantity*OrderLines.UnitPrice) AS TotalSummForPickedItems,OrderID
+  FROM Sales.OrderLines
+  GROUP BY OrderID
+) 
 SELECT 
-Invoices.InvoiceID, 
-Invoices.InvoiceDate,
-People.FullName AS SalesPersonName,
-SalesTotals.TotalSumm AS TotalSummByInvoice, 
-TotalSummForPickedItems
+    Invoices.InvoiceID, 
+    Invoices.InvoiceDate,
+    People.FullName AS SalesPersonName,
+    SalesTotals.TotalSumm AS TotalSummByInvoice, 
+    TotalSummForPickedItems
 FROM Sales.Invoices 
   JOIN SalesTotals ON Invoices.InvoiceID = SalesTotals.InvoiceID
   JOIN Sales.Orders ON Orders.OrderId = Invoices.OrderId
