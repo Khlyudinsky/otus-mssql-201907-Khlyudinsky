@@ -2,7 +2,7 @@
 --1. Посчитать среднюю цену товара, общую сумму продажи по месяцам
 SELECT 
    YEAR(so.OrderDate) * 100 + MONTH(so.OrderDate) as Period,
-   CONVERT(NUMERIC(15,2),AVG(sol.UnitPrice)) AS AvgPrice,
+   AVG(sol.UnitPrice) AS AvgPrice,
    SUM(sol.UnitPrice) AS TotalSum
 FROM Sales.Orders so
   JOIN Sales.OrderLines sol ON so.OrderID=sol.OrderID
@@ -37,7 +37,7 @@ FROM Sales.Orders so
   JOIN Sales.OrderLines sol ON so.OrderID=sol.OrderID
   JOIN Warehouse.StockItems wsi ON wsi.StockItemID = sol.StockItemID
 GROUP BY YEAR(so.OrderDate) * 100 + MONTH(so.OrderDate),wsi.StockItemName
-HAVING SUM(sol.Quantity)>=50
+HAVING SUM(sol.Quantity)<50
 
 /*3. Напишите запрос с временной таблицей и перепишите его с табличной переменной. Сравните планы. 
 В качестве запроса с временной таблицей и табличной переменной можно взять свой запрос. 
@@ -176,35 +176,6 @@ INSERT INTO dbo.MyEmployees VALUES
 ,(16, N'David',N'Bradley', N'Marketing Manager', 4, 273) 
 ,(23, N'Mary', N'Gibson', N'Marketing Specialist', 4, 16); 
 
-
-WITH CteRecurse AS
-(
-  SELECT EmployeeID,FirstName,LastName,Title,1 AS level,ManagerID
-  FROM dbo.MyEmployees
-  WHERE ManagerID is NULL
-  UNION ALL
-  SELECT t.EmployeeID, t.FirstName, t.LastName, t.Title,level + 1, t.ManagerID
-  FROM dbo.MyEmployees t
-    JOIN CteRecurse c ON t.ManagerID=c.EmployeeID
-  WHERE c.level<5
-)
-SELECT LEFT(CONVERT(VARCHAR(10),t.EmployeeID) + SPACE(10),10) +
-       REPLICATE(' | ',ISNULL(c.level,0)) +
-       t.FirstName + ' ' + 
-       t.LastName +  ' ' + 
-       t.Title + ' ' +
-       CONVERT(VARCHAR(10),ISNULL(c.level,0)+1) AS Result
-INTO #TableCteRecurse
-FROM dbo.MyEmployees t
-  LEFT JOIN CteRecurse c ON t.ManagerID=c.EmployeeID
-
-
-
-DECLARE @TableCteRecurse TABLE
-( 
-  Result VARCHAR(300)
-)
-
 ;WITH CteRecurse AS
 (
   SELECT EmployeeID,FirstName,LastName,Title,1 AS level,ManagerID
@@ -216,17 +187,58 @@ DECLARE @TableCteRecurse TABLE
     JOIN CteRecurse c ON t.ManagerID=c.EmployeeID
   WHERE c.level<5
 )
-INSERT INTO @TableCteRecurse 
 SELECT LEFT(CONVERT(VARCHAR(10),t.EmployeeID) + SPACE(10),10) +
        REPLICATE(' | ',ISNULL(c.level,0)) +
        t.FirstName + ' ' + 
        t.LastName +  ' ' + 
        t.Title + ' ' +
-       CONVERT(VARCHAR(10),ISNULL(c.level,0)+1) AS Result
+       CONVERT(VARCHAR(10),ISNULL(c.level,0)+1) AS Result,
+	   isnull(c.Level,0) AS Level,
+	   t.EmployeeID,
+       IIF(isnull(c.Level,0)<=1,0,1) AS Sort1,
+	   IIF(t.EmployeeID=276,2,0) AS Sort2
+INTO #TableCteRecurse 
+FROM dbo.MyEmployees t
+  LEFT JOIN CteRecurse c ON t.ManagerID=c.EmployeeID
+  ORDER BY t.ManagerID
+
+
+DECLARE @TableCteRecurse TABLE
+( 
+  Result VARCHAR(300),
+  Level  smallint,
+  EmployeeID smallint,
+  Sort1 int,
+  Sort2 int
+)
+
+;WITH CteRecurse AS
+(
+  SELECT EmployeeID,FirstName,LastName,Title,1 AS level,ManagerID
+  FROM dbo.MyEmployees
+  WHERE ManagerID is NULL
+  UNION ALL
+  SELECT t.EmployeeID, t.FirstName, t.LastName, t.Title,level + 1, t.ManagerID
+  FROM dbo.MyEmployees t
+    JOIN CteRecurse c ON c.EmployeeID=t.ManagerID
+  WHERE c.level<5
+)
+INSERT INTO @TableCteRecurse (Result,Level,EmployeeID,Sort1,Sort2)
+SELECT LEFT(CONVERT(VARCHAR(10),t.EmployeeID) + SPACE(10),10) +
+       REPLICATE(' | ',ISNULL(c.level,0)) +
+       t.FirstName + ' ' + 
+       t.LastName +  ' ' + 
+       t.Title + ' ' +
+       CONVERT(VARCHAR(10),ISNULL(c.level,0)+1) AS Result,
+	   isnull(c.Level,0) AS Level,
+	   t.EmployeeID,
+       IIF(isnull(c.Level,0)<=1,0,1) AS Sort1,
+	   IIF(t.EmployeeID=276,2,0) AS Sort2
 FROM dbo.MyEmployees t
   LEFT JOIN CteRecurse c ON t.ManagerID=c.EmployeeID
 
-SELECT * FROM #TableCteRecurse
-SELECT * FROM @TableCteRecurse
+SELECT Result FROM #TableCteRecurse ORDER BY Sort1,EmployeeID-Sort2
+SELECT Result FROM @TableCteRecurse ORDER BY Sort1,EmployeeID-Sort2
+
 DROP TABLE dbo.MyEmployees
 DROP TABLE #TableCteRecurse
