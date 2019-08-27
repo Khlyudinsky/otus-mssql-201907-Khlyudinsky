@@ -193,10 +193,10 @@ SELECT LEFT(CONVERT(VARCHAR(10),t.EmployeeID) + SPACE(10),10) +
        t.LastName +  ' ' + 
        t.Title + ' ' +
        CONVERT(VARCHAR(10),ISNULL(c.level,0)+1) AS Result,
-	   isnull(c.Level,0) AS Level,
-	   t.EmployeeID,
-       IIF(isnull(c.Level,0)<=1,0,1) AS Sort1,
-	   IIF(t.EmployeeID=276,2,0) AS Sort2
+       ISNULL(c.Level,0) AS Level,
+       t.EmployeeID,
+       IIF(ISNULL(c.Level,0)<=1,0,1) AS Sort1,
+       IIF(t.EmployeeID=276,2,0) AS Sort2
 INTO #TableCteRecurse 
 FROM dbo.MyEmployees t
   LEFT JOIN CteRecurse c ON t.ManagerID=c.EmployeeID
@@ -230,10 +230,10 @@ SELECT LEFT(CONVERT(VARCHAR(10),t.EmployeeID) + SPACE(10),10) +
        t.LastName +  ' ' + 
        t.Title + ' ' +
        CONVERT(VARCHAR(10),ISNULL(c.level,0)+1) AS Result,
-	   isnull(c.Level,0) AS Level,
-	   t.EmployeeID,
-       IIF(isnull(c.Level,0)<=1,0,1) AS Sort1,
-	   IIF(t.EmployeeID=276,2,0) AS Sort2
+       ISNULL(c.Level,0) AS Level,
+       t.EmployeeID,
+       IIF(ISNULL(c.Level,0)<=1,0,1) AS Sort1,
+       IIF(t.EmployeeID=276,2,0) AS Sort2
 FROM dbo.MyEmployees t
   LEFT JOIN CteRecurse c ON t.ManagerID=c.EmployeeID
 
