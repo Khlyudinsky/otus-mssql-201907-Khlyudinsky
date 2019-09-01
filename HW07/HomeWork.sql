@@ -15,11 +15,11 @@ InvoiceMonth Peeples Valley, AZ Medicine Lodge, KS Gasport, NY Sylvanite, MT Jes
 */
  
 
-SELECT InvoiceMonth,[Tailspin Toys (Sylvanite, MT)],[Tailspin Toys (Peeples Valley, AZ)],[Tailspin Toys (Medicine Lodge, KS)],[Tailspin Toys (Gasport, NY)],[Tailspin Toys (Jessie, ND)] FROM
+SELECT InvoiceMonth,[Sylvanite, MT],[Peeples Valley, AZ],[Medicine Lodge, KS],[Gasport, NY],[Jessie, ND] FROM
 (
   SELECT
   sc.CustomerID,
-  sc.CustomerName,
+  LTRIM(REPLACE(REPLACE(REPLACE(sc.CustomerName,'Tailspin Toys',''),')',''),'(','')) AS CustomerName,
   Convert(Varchar,dateadd(dd,1-datepart(dd,so.OrderDate),so.OrderDate),104) AS InvoiceMonth,
   Convert(Date,dateadd(dd,1-datepart(dd,so.OrderDate),so.OrderDate),104) AS InvoiceMonthSort
   FROM Sales.Orders so
@@ -28,7 +28,7 @@ SELECT InvoiceMonth,[Tailspin Toys (Sylvanite, MT)],[Tailspin Toys (Peeples Vall
 ) AS Table1
 PIVOT (
         COUNT(CustomerID)
-        FOR CustomerName IN ([Tailspin Toys (Sylvanite, MT)],[Tailspin Toys (Peeples Valley, AZ)],[Tailspin Toys (Medicine Lodge, KS)],[Tailspin Toys (Gasport, NY)],[Tailspin Toys (Jessie, ND)])
+        FOR CustomerName IN ([Sylvanite, MT],[Peeples Valley, AZ],[Medicine Lodge, KS],[Gasport, NY],[Jessie, ND])
       )
 AS PVT
 ORDER BY InvoiceMonthSort;
