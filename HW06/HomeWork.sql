@@ -176,20 +176,23 @@ FROM Warehouse.StockItems wsi
 
 --4. По каждому сотруднику выведите последнего клиента, которому сотрудник что-то продал
 --В результатах должны быть ид и фамилия сотрудника, ид и название клиента, дата продажи, сумму сделки
-SELECT 
-  ap.PersonID,
-  ap.PreferredName,
-  sc.CustomerID,
-  sc.CustomerName,
-  so.OrderDate,
-  sil.ExtendedPrice,
-  LAST_VALUE(CustomerName) OVER (PARTITION BY ap.PersonID ORDER BY so.OrderDate ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) LastCustomerName
-FROM Sales.Orders so
-  JOIN Sales.Invoices si ON si.OrderID=so.OrderID
-  JOIN Sales.InvoiceLines sil ON sil.InvoiceID = si.InvoiceID
-  JOIN Sales.Customers sc ON sc.CustomerID = so.CustomerID
-  JOIN Application.People ap ON ap.PersonID = so.SalespersonPersonID
-  ORDER BY ap.PersonID
+WITH CteQuery AS
+(
+  SELECT 
+	ap.PersonID,
+	ap.PreferredName,
+	sc.CustomerID,
+	sc.CustomerName,
+	so.OrderDate,
+	sil.ExtendedPrice,
+	ROW_NUMBER() OVER (PARTITION BY ap.PersonID ORDER BY so.OrderDate DESC) RowNum
+  FROM Sales.Orders so
+	JOIN Sales.Invoices si ON si.OrderID=so.OrderID
+	JOIN Sales.InvoiceLines sil ON sil.InvoiceID = si.InvoiceID
+	JOIN Sales.Customers sc ON sc.CustomerID = so.CustomerID
+	JOIN Application.People ap ON ap.PersonID = so.SalespersonPersonID
+)
+SELECT * FROM CteQuery WHERE ROWNUM = 1
 
 --5. Выберите по каждому клиенту 2 самых дорогих товара, которые он покупал
 --В результатах должно быть ид клиета, его название, ид товара, цена, дата покупки
