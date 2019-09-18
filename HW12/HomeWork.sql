@@ -83,14 +83,13 @@ FROM Warehouse.StockItems
 Тэги искать в поле CustomFields, а не в Tags.
 */
 
-SELECT 
-  StockItemID,
-  StockItemName,
-  CustomFields,
-  JSON_VALUE(CustomFields, '$.Vintage')
-FROM Warehouse.StockItems
-WHERE JSON_VALUE(CustomFields,'$.Vintage') IS NOT NULL
-
+SELECT
+  wsi.StockItemID,
+  wsi.StockItemName,
+  wsi.CustomFields
+FROM Warehouse.StockItems wsi
+CROSS APPLY OPENJSON(wsi.CustomFields,'$.tags') as tags
+WHERE tags.value = 'Vintage'
 
 /*
 5. Пишем динамический PIVOT.
@@ -116,7 +115,7 @@ InvoiceMonth Peeples Valley, AZ Medicine Lodge, KS Gasport, NY Sylvanite, MT Jes
 */
 
 DECLARE @HWQuery VARCHAR(max),
-        @PVFields VARCHAR(200)
+        @PVFields VARCHAR(max)
 
 SELECT @PVFields = (
                      SELECT 
