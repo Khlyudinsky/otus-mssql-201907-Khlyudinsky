@@ -1,0 +1,88 @@
+На диаграмме создал 5 таблиц из проекта, краткое описание проекта: 
+https://github.com/Khlyudinsky/otus-mssql-201907-Khlyudinsky/blob/master/HW01/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%82.txt
+
+Таблица tEmployeeDate - будет темпорированная, для учета изменения статуса сотрудников, визуальное средство 
+проектирования https://app.sqldbm.com - этого пока не умеет.
+
+Все таблицы находятся в 3 НФ, кроме таблицы tInstLicense, она находится во второй, поскольку можно было 
+использовать справочник организаций выдавших документ удостоверяющий личность (ДУЛ), я решил этого не делать, 
+так как обычно выбирая информацию о ДУЛ мы хотим получить полную информацию о нем (серия, номер, кеи выдан, когда выдан и т.д.), 
+всегда это будет дополнительный join.
+Также рукописное заполнение данного поля в наших документах дает много вариантов внесения одного и того-же органа
+выдавшего ДУЛ (Наприме г.Волгограда, гор.Волгограда, города Волгограда и т.д.). 
+Отдельный справочник в данном случае увеличит трудозатраты пользователей. 
+
+Скрипт, который сгенерировал sqldbm (к сожалению в бесплатной версии всего 2 таблицы)
+
+-- Warning: You can generate script only for two tables at a time in your Free plan 
+-- 
+-- ****************** SqlDBM: Microsoft SQL Server ******************
+-- ******************************************************************
+
+-- ************************************** [dbo].[tEmployee]
+
+CREATE TABLE [dbo].[tEmployee]
+(
+ [EmployeeID]         numeric(15,0) NOT NULL ,
+ [TabNumber]          nvarchar(15) NOT NULL ,
+ [OrganizationUnitID] nvarchar(15) NOT NULL ,
+ [InstitutionID]      numeric(15,0) NOT NULL ,
+
+
+ CONSTRAINT [PK_tEmployee] PRIMARY KEY CLUSTERED ([EmployeeID] ASC),
+ CONSTRAINT [FK_36] FOREIGN KEY ([InstitutionID])  REFERENCES [dbo].[tInstitution]([InstitutionID])
+);
+GO
+
+
+CREATE NONCLUSTERED INDEX [fkIdx_36] ON [dbo].[tEmployee] 
+ (
+  [InstitutionID] ASC
+ )
+
+GO
+
+
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Таблица сотрудники', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'tEmployee';
+GO
+
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Табельный номер', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'tEmployee', @level2type=N'COLUMN', @level2name=N'TabNumber';
+GO
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'связь с таблицей подразделений', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'tEmployee', @level2type=N'COLUMN', @level2name=N'OrganizationUnitID';
+GO
+
+
+
+
+-- ************************************** [dbo].[tEmployeeDate]
+
+CREATE TABLE [dbo].[tEmployeeDate]
+(
+ [EmployeeDateID]  NOT NULL ,
+ [Status]         int NOT NULL ,
+ [EmployeeID]     numeric(15,0) NOT NULL ,
+
+
+ CONSTRAINT [PK_tEmployeeDate] PRIMARY KEY CLUSTERED ([EmployeeDateID] ASC),
+ CONSTRAINT [FK_13] FOREIGN KEY ([EmployeeID])  REFERENCES [dbo].[tEmployee]([EmployeeID])
+);
+GO
+
+
+CREATE NONCLUSTERED INDEX [fkIdx_13] ON [dbo].[tEmployeeDate] 
+ (
+  [EmployeeID] ASC
+ )
+
+GO
+
+
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'Таблица со статусами сотрудников - темпоральная(приема на работу, больничных, коммандировок, увольнения)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'tEmployeeDate';
+GO
+
+EXEC sp_addextendedproperty @name = N'MS_Description', @value = N'(1-работает, 2- больничный,3 – коммандировка,0-уволен)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'tEmployeeDate', @level2type=N'COLUMN', @level2name=N'Status';
+GO
+
+
+
+
