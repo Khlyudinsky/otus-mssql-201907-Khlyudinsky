@@ -159,4 +159,4 @@ ALTER TABLE Dbo.tInstContact ADD CONSTRAINT Fk_tInstContact_tTypeContact FOREIGN
 
 CREATE UNIQUE NONCLUSTERED INDEX [Idx_tInstitution_Brief] ON [dbo].[tInstitution] ([Brief])
 CREATE UNIQUE NONCLUSTERED INDEX [Idx_tInstitution_FIO_BirthDate] ON [dbo].[tInstitution] ([Name],[Name1],[Name2],[BirthDate])
-CREATE UNIQUE NONCLUSTERED INDEX [Idx_tInstLicense_Series_Number] ON [dbo].[tInstLicense] ([Series],[Number])
+CREATE NONCLUSTERED INDEX [Idx_tInstLicense_Series_Number] ON [dbo].[tInstLicense] ([Series],[Number])
