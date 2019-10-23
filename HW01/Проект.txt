@@ -1,74 +1,73 @@
 Описание: База данных сотрудников предприятия, в которой хранится справочная информация о сотрудниках в структуре предприятия 
-и его анкетных данных(адреса, документы удостоверяющие личность). 
+и их анкетных данных(адреса, документы удостоверяющие личность). 
 Данная база может быть использована для формирования телефонного справочника и иерархической структуры предприятия.
 
 
-1.tEmployee  - Таблица сотрудники - темпоральная
+1.tEmployee  - Таблица сотрудники
 EmployeeID – numeric(15,0),
-TabNumber– varchar(15) - Табельный номер,
+TabNumber– nvarchar(15) - Табельный номер,
 OrganizationUnitID – numeric(15,0) – связь с таблицей подразделений
 InstitutionID  – numeric(15,0) – связь с таблицей клиентов ФЛ
-
-2.tEmployeeDate – Таблица со статусами сотрудников - темпоральная(приема на работу, больничных, коммандировок, увольнения)
-EmployeeDateID  – numeric(15,0),
-EmployeeID – numeric(15,0),
 Status – int (1-работает, 2- больничный,3 – коммандировка,0-уволен)
+SysStartTime - datetime2 - поле обеспечивающе темпоральность
+SysEndTime - datetime2 - поле обеспечивающе темпоральность
 
-3.tInstitution – Таблица клиентов физ.лиц (в ней же заносится информация о сотрудниках)
+2.tInstitution – Таблица клиентов физ.лиц (в ней же заносится информация о сотрудниках)
 InstitutionID  – numeric(15,0),
-Brief – varchar(20)– сокращенное наименование клиента
-Name – varchar(50) Фамилия
-Name1 – varchar(50) Имя
-Name2 – varchar(50) Отчество
+Brief – nvarchar(20)– сокращенное наименование клиента
+Name – nvarchar(50) Фамилия
+Name1 – nvarchar(50) Имя
+Name2 – nvarchar(50) Отчество
 Birthdate – date – Дата рождения
-InstLicenseID – numeric(15,0) связь с таблицей документов удостоверяющих личность
-InstAddressID – numeric(15,0) связь с таблицей адресов
-Comment – varchar(255) - Примечание 
+Comment – nvarchar(255) - Примечание 
 
-4.tInstLicenseID – Таблица документов удостоверяющих личность и др.
+3.tInstLicense – Таблица документов удостоверяющих личность и др.
 InstLicenseID –  numeric(15,0),
 InstitutionID – numeric(15,0) связь с таблицей клиентов,
 TypeDocID – numeric(15,0) связь с таблицей типов документов,
-Series – varchar(10) – серия документа
-Number – varchar(50) – номер документа
-Organization – varchar(100) организация выдавшая документ,
+Series – nvarchar(10) – серия документа
+Number – nvarchar(50) – номер документа
+Organization – nvarchar(100) организация выдавшая документ,
 DateStart – date – дата начала действия документа,
 DateEnd – date – дата окончания действия документа,
-DopNumber1 – varchar(50) – дополнительный номер документа (например код подразделения в паспорте)
+DopNumber1 – nvarchar(50) – дополнительный номер документа (например код подразделения в паспорте)
 Flag – int – признак действия (1- действующий, 0 - недействующий)
-Comment – varchar(255) - Примечание 
+Comment – nvarchar(255) - Примечание 
 
-5.tTypeDoc – Справочник типов документов
+4.tTypeDoc – Справочник типов документов
 TypeDocID – numeric(15,0),
-Name – varchar(50) – Название документа
-MaskSeries – varchar(30) – маска ввода серии документа
-MaskNumber – varchar(50) – маска ввода номера документа
-MaskDopNumber1 – varchar(30) – дополнительный номер документа (например код подразделения в паспорте)
+Name – nvarchar(50) – Название документа
+MaskSeries – nvarchar(30) – маска ввода серии документа
+MaskNumber – nvarchar(50) – маска ввода номера документа
+MaskDopNumber1 – nvarchar(30) – дополнительный номер документа (например код подразделения в паспорте)
 
-6.tInstAddress – таблицей адресов 
+5.tInstAddress – таблицей адресов 
 InstAddressID – numeric(15,0),
 InstitutionID – numeric(15,0) связь с таблицей клиентов,
-Address – varchar(255) – адрес строкой
+Address – nvarchar(255) – адрес строкой
 TypeAddressID – numeric(15,0) связь с таблицей типов адресов,
-Flag – bit – признак действия (1- действующий, 0 - недействующий)
+Flag – int – признак действия (1- действующий, 0 - недействующий)
 
-7.tTypeAddress – Справочник типов адресов
-TypeAddressID – numeric(15,0),
-Name – varchar(50) – Название типа адреса
+6.tTypeAddress – Справочник типов адресов
+TypeAddressID  – numeric(15,0),
+Name – nvarchar(50) – Название типа адреса
 
-8.tOrganizationUnit – список подразделений - темпоральная
+7.tOrganizationUnit – список подразделений 
 OrganizationUnitID – numeric(15,0),
 ParentID - numeric(15,0) – вышестоящее подразделение,
-Name – varchar(100) – Наименование подразделения
+Name – nvarchar(100) – Наименование подразделения
+SysStartTime - datetime2 - поле обеспечивающе темпоральность
+SysEndTime - datetime2 - поле обеспечивающе темпоральность
 
-9.tInstContact - Контактные данные клиентов
+8.tInstContact - Контактные данные клиентов
 InstContactID – numeric(15,0),
 InstitutionID - numeric(15,0) - связь с таблицей клиентов,
 TypeContactID – numeric(15,0) - связь с таблицей типы контактов,
+Contact       - nvarchar(100) - информация о контакте
 
-10.tTypeContact - Справочник типов контактов
+9.tTypeContact - Справочник типов контактов
 TypeContactID – numeric(15,0),
-ContactName – varchar(100) – Типа адреса
+ContactName – nvarchar(100) – Наименование типа контакта
 
 
 
