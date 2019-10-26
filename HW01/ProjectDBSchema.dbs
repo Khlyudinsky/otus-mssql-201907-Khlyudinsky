@@ -13,8 +13,7 @@
 			<column name="InstitutionID" type="pkey" jt="2" >
 				<comment><![CDATA[Связь с таблицей клиентов ФЛ]]></comment>
 			</column>
-			<column name="StatusID" type="tinyint" jt="-6" mandatory="y" >
-				<defo>1</defo>
+			<column name="StatusID" type="tinyint" jt="-6" >
 				<comment><![CDATA[Связь с таблицей статусов]]></comment>
 			</column>
 			<column name="SysStartTime" type="datetime2" jt="92" >
@@ -105,7 +104,7 @@
 		<table name="tInstLicense" >
 			<comment><![CDATA[Таблица документов удостоверяющих личность и др.]]></comment>
 			<column name="InstLicenseID" type="pkey" jt="2" mandatory="y" autoincrement="y" />
-			<column name="InstitutionID`" type="pkey" jt="2" mandatory="y" >
+			<column name="InstitutionID" type="pkey" jt="2" mandatory="y" >
 				<comment><![CDATA[связь с таблицей клиентов]]></comment>
 			</column>
 			<column name="TypeDocID" type="pkey" jt="2" mandatory="y" >
@@ -140,7 +139,7 @@
 				<column name="InstLicenseID" />
 			</index>
 			<fk name="Fk_tInstLicense_tInstitution" to_schema="Dbo" to_table="tInstitution" >
-				<fk_column name="InstitutionID`" pk="InstitutionID" />
+				<fk_column name="InstitutionID" pk="InstitutionID" />
 			</fk>
 			<fk name="Fk_tInstLicense_tTypeDoc" to_schema="Dbo" to_table="tTypeDoc" >
 				<fk_column name="TypeDocID" pk="TypeDocID" />
@@ -244,15 +243,15 @@
 		</table>
 	</schema>
 	<layout name="Default Layout" id="Layout_15edf89" show_column_type="y" show_schema_name="y" show_relation="columns" >
-		<entity schema="Dbo" name="tTypeAddress" color="C1D8EE" x="976" y="352" />
-		<entity schema="Dbo" name="tTypeContact" color="C1D8EE" x="912" y="480" />
-		<entity schema="Dbo" name="tInstContact" color="C1D8EE" x="672" y="448" />
-		<entity schema="Dbo" name="tInstAddress" color="C1D8EE" x="656" y="288" />
 		<entity schema="Dbo" name="tTypeDoc" color="C1D8EE" x="48" y="432" />
 		<entity schema="Dbo" name="tInstLicense" color="C1D8EE" x="48" y="80" />
+		<entity schema="Dbo" name="tTypeContact" color="C1D8EE" x="912" y="480" />
+		<entity schema="Dbo" name="tInstContact" color="C1D8EE" x="672" y="448" />
+		<entity schema="Dbo" name="tTypeAddress" color="C1D8EE" x="976" y="352" />
+		<entity schema="Dbo" name="tInstAddress" color="C1D8EE" x="656" y="288" />
 		<entity schema="Dbo" name="tOrganizationUnit" color="C1D8EE" x="288" y="64" />
-		<entity schema="Dbo" name="tStatus" color="C1D8EE" x="912" y="96" />
 		<entity schema="Dbo" name="tInstitution" color="C1D8EE" x="304" y="272" />
+		<entity schema="Dbo" name="tStatus" color="C1D8EE" x="912" y="96" />
 		<entity schema="Dbo" name="tEmployee" color="C1D8EE" x="656" y="48" />
 		<callout x="336" y="1040" pointer="Round" >
 			<comment><![CDATA[This project is in offline mode.
@@ -304,6 +303,40 @@ exec sp_addextendedproperty  @name=N'MS_Description', @value=N'1-работае�
 ALTER TABLE Dbo.tEmployeeDate ADD CONSTRAINT Fk_tEmployeeDate_tEmployee FOREIGN KEY ( EmployeeID ) REFERENCES Dbo.tEmployee( EmployeeID ) ON DELETE NO ACTION ON UPDATE NO ACTION;
 ]]></string>
 		</script>
+		<script name="tEmployee_001" id="Editor_57db74b" language="SQL" >
+			<string><![CDATA[CREATE TABLE Dbo.tEmployee ( 
+	EmployeeID           pkey NOT NULL   IDENTITY,
+	TabNumber            nvarchar(15) NOT NULL   ,
+	OrganizationUnitID   pkey    ,
+	InstitutionID        pkey    ,
+	StatusID             tinyint NOT NULL CONSTRAINT defo_tEmployee_StatusID DEFAULT 1  ,
+	SysStartTime         datetime2    ,
+	SysEndDateTime       datetime2    ,
+	CONSTRAINT Pk_tEmployee_EmployeeID PRIMARY KEY  ( EmployeeID ),
+	CONSTRAINT Unq_tEmployee_SysStartTime UNIQUE ( SysStartTime ) 
+ );
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Таблица сотрудники' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tEmployee';;
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Табельный номер' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tEmployee', @level2type=N'COLUMN',@level2name=N'TabNumber';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Связь с таблицей подразделений' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tEmployee', @level2type=N'COLUMN',@level2name=N'OrganizationUnitID';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Связь с таблицей клиентов ФЛ' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tEmployee', @level2type=N'COLUMN',@level2name=N'InstitutionID';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Связь с таблицей статусов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tEmployee', @level2type=N'COLUMN',@level2name=N'StatusID';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'поле обеспечивающе темпоральность' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tEmployee', @level2type=N'COLUMN',@level2name=N'SysStartTime';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'поле обеспечивающе темпоральность' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tEmployee', @level2type=N'COLUMN',@level2name=N'SysEndDateTime';
+
+ALTER TABLE Dbo.tEmployee ADD CONSTRAINT Fk_tEmployee_tInstitution FOREIGN KEY ( InstitutionID ) REFERENCES Dbo.tInstitution( InstitutionID ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+ALTER TABLE Dbo.tEmployee ADD CONSTRAINT Fk_tEmployee_tOrganizationUnit FOREIGN KEY ( OrganizationUnitID ) REFERENCES Dbo.tOrganizationUnit( OrganizationUnitID ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+ALTER TABLE Dbo.tEmployee ADD CONSTRAINT Fk_tEmployee_tStatus FOREIGN KEY ( StatusID ) REFERENCES Dbo.tStatus( StatusID ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+]]></string>
+		</script>
 		<script name="tEmployee_002" id="Editor_3502ec9" language="SQL" >
 			<string><![CDATA[CREATE TABLE Dbo.tEmployee ( 
 	EmployeeID           numeric(15,0) NOT NULL   IDENTITY,
@@ -348,6 +381,31 @@ ALTER TABLE Dbo.tInstAddress ADD CONSTRAINT Fk_tInstAddress_tTypeAddress FOREIGN
 
 ALTER TABLE Dbo.tInstAddress ADD CONSTRAINT Fk_tInstAddress_tInstitution FOREIGN KEY ( InstitutionID ) REFERENCES Dbo.tInstitution( InstitutionID ) ON DELETE NO ACTION ON UPDATE NO ACTION;]]></string>
 		</script>
+		<script name="tInstAddress_001" id="Editor_33ddfd3" language="SQL" >
+			<string><![CDATA[CREATE TABLE Dbo.tInstAddress ( 
+	InstAddressID        pkey NOT NULL   IDENTITY,
+	InstitutionID        pkey NOT NULL   ,
+	Address              nvarchar(255) NOT NULL   ,
+	TypeAddressID        pkey NOT NULL   ,
+	Flag                 tinyint NOT NULL CONSTRAINT defo_tInstAddress_Flag DEFAULT 1  ,
+	CONSTRAINT Pk_tInstAddress_InstAddressID PRIMARY KEY  ( InstAddressID )
+ );
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Таблица адресов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstAddress';;
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'связь с таблицей клиентов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstAddress', @level2type=N'COLUMN',@level2name=N'InstitutionID';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'адрес строкой' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstAddress', @level2type=N'COLUMN',@level2name=N'Address';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'связь с таблицей типов адресов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstAddress', @level2type=N'COLUMN',@level2name=N'TypeAddressID';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'признак действия (1- действующий, 0 - недействующий)' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstAddress', @level2type=N'COLUMN',@level2name=N'Flag';
+
+ALTER TABLE Dbo.tInstAddress ADD CONSTRAINT Fk_tInstAddress_tTypeAddress FOREIGN KEY ( TypeAddressID ) REFERENCES Dbo.tTypeAddress( TypeAddressID ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+ALTER TABLE Dbo.tInstAddress ADD CONSTRAINT Fk_tInstAddress_tInstitution FOREIGN KEY ( InstitutionID ) REFERENCES Dbo.tInstitution( InstitutionID ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+]]></string>
+		</script>
 		<script name="tInstContact" id="Editor_40c46af" language="SQL" >
 			<string><![CDATA[CREATE TABLE Dbo.tInstContact ( 
 	InstContactID        numeric(15,0) NOT NULL   IDENTITY,
@@ -368,6 +426,28 @@ exec sp_addextendedproperty  @name=N'MS_Description', @value=N'информац�
 ALTER TABLE Dbo.tInstContact ADD CONSTRAINT Fk_tInstContact_tInstitution FOREIGN KEY ( InstitutionID ) REFERENCES Dbo.tInstitution( InstitutionID ) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 ALTER TABLE Dbo.tInstContact ADD CONSTRAINT Fk_tInstContact_tTypeContact FOREIGN KEY ( TypeContactID ) REFERENCES Dbo.tTypeContact( TypeContactID ) ON DELETE NO ACTION ON UPDATE NO ACTION;]]></string>
+		</script>
+		<script name="tInstContact_001" id="Editor_485bdc3" language="SQL" >
+			<string><![CDATA[CREATE TABLE Dbo.tInstContact ( 
+	InstContactID        pkey NOT NULL   IDENTITY,
+	InstitutionID        pkey NOT NULL   ,
+	TypeContactID        pkey NOT NULL   ,
+	Contact              nvarchar(100) NOT NULL   ,
+	CONSTRAINT Pk_tInstContact_InstContactID PRIMARY KEY  ( InstContactID )
+ );
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Контактные данные клиентов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstContact';;
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'связь с таблицей клиентов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstContact', @level2type=N'COLUMN',@level2name=N'InstitutionID';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'связь с таблицей типы контактов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstContact', @level2type=N'COLUMN',@level2name=N'TypeContactID';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'информация о контакте' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstContact', @level2type=N'COLUMN',@level2name=N'Contact';
+
+ALTER TABLE Dbo.tInstContact ADD CONSTRAINT Fk_tInstContact_tInstitution FOREIGN KEY ( InstitutionID ) REFERENCES Dbo.tInstitution( InstitutionID ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+ALTER TABLE Dbo.tInstContact ADD CONSTRAINT Fk_tInstContact_tTypeContact FOREIGN KEY ( TypeContactID ) REFERENCES Dbo.tTypeContact( TypeContactID ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+]]></string>
 		</script>
 		<script name="tInstLicense" id="Editor_1e7f7b2" language="SQL" >
 			<string><![CDATA[CREATE TABLE Dbo.tInstLicense ( 
@@ -494,6 +574,49 @@ ALTER TABLE Dbo.tInstLicense ADD CONSTRAINT Fk_tInstLicense_tInstitution FOREIGN
 
 ALTER TABLE Dbo.tInstLicense ADD CONSTRAINT Fk_tInstLicense_tTypeDoc FOREIGN KEY ( TypeDocID ) REFERENCES Dbo.tTypeDoc( TypeDocID ) ON DELETE NO ACTION ON UPDATE NO ACTION;]]></string>
 		</script>
+		<script name="tInstLicense_003" id="Editor_472205f" language="SQL" >
+			<string><![CDATA[CREATE TABLE Dbo.tInstLicense ( 
+	InstLicenseID        pkey NOT NULL   IDENTITY,
+	InstitutionID`       pkey NOT NULL   ,
+	TypeDocID            pkey NOT NULL   ,
+	Series               nvarchar(10)    ,
+	Number               nvarchar(50)    ,
+	Organization         nvarchar(255)    ,
+	DateStart            date    ,
+	DateEnd              date    ,
+	DopNumber1           nvarchar(50)    ,
+	Flag                 tinyint NOT NULL CONSTRAINT defo_tInstLicense_Flag DEFAULT 1  ,
+	Comment              nvarchar(255)    ,
+	CONSTRAINT Pk_tInstLicense_InstLicenseID PRIMARY KEY  ( InstLicenseID )
+ );
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Таблица документов удостоверяющих личность и др.' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstLicense';;
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'связь с таблицей клиентов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstLicense', @level2type=N'COLUMN',@level2name=N'InstitutionID`';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'связь с таблицей типов документов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstLicense', @level2type=N'COLUMN',@level2name=N'TypeDocID';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'серия документа' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstLicense', @level2type=N'COLUMN',@level2name=N'Series';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'номер документа' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstLicense', @level2type=N'COLUMN',@level2name=N'Number';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'организация выдавшая документ' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstLicense', @level2type=N'COLUMN',@level2name=N'Organization';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'дата начала действия документа' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstLicense', @level2type=N'COLUMN',@level2name=N'DateStart';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'дата окончания действия документа' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstLicense', @level2type=N'COLUMN',@level2name=N'DateEnd';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'дополнительный номер документа (например код подразделения в паспорте)' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstLicense', @level2type=N'COLUMN',@level2name=N'DopNumber1';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'признак действия (1- действующий, 0 - недействующий)' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstLicense', @level2type=N'COLUMN',@level2name=N'Flag';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Примечание' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstLicense', @level2type=N'COLUMN',@level2name=N'Comment';
+
+ALTER TABLE Dbo.tInstLicense ADD CONSTRAINT Fk_tInstLicense_tInstitution FOREIGN KEY ( InstitutionID` ) REFERENCES Dbo.tInstitution( InstitutionID ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+ALTER TABLE Dbo.tInstLicense ADD CONSTRAINT Fk_tInstLicense_tTypeDoc FOREIGN KEY ( TypeDocID ) REFERENCES Dbo.tTypeDoc( TypeDocID ) ON DELETE NO ACTION ON UPDATE NO ACTION;
+]]></string>
+		</script>
 		<script name="tInstitution" id="Editor_e840dc" language="SQL" >
 			<string><![CDATA[CREATE TABLE WorkDb.tInstitution ( 
 	InstitutionID        numeric(15,0) NOT NULL   IDENTITY,
@@ -555,6 +678,36 @@ exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Дата рожд
 
 exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Примечание' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstitution', @level2type=N'COLUMN',@level2name=N'Comment';]]></string>
 		</script>
+		<script name="tInstitution_002" id="Editor_40eb861" language="SQL" >
+			<string><![CDATA[CREATE TABLE Dbo.tInstitution ( 
+	InstitutionID        pkey NOT NULL   IDENTITY,
+	Brief                nvarchar(20) NOT NULL   ,
+	SecondName           nvarchar(50) NOT NULL   ,
+	FirstName            nvarchar(50) NOT NULL   ,
+	MiddleName           nvarchar(50)    ,
+	BirthDate            date NOT NULL   ,
+	Comment              nvarchar(255)    ,
+	IsDelete             tinyint    ,
+	CONSTRAINT Pk_tInstitution_InstitutionID PRIMARY KEY  ( InstitutionID )
+ );
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Таблица клиентов физ.лиц (в ней же заносится информация о сотрудниках)' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstitution';;
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'сокращенное наименование клиента' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstitution', @level2type=N'COLUMN',@level2name=N'Brief';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Фамилия' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstitution', @level2type=N'COLUMN',@level2name=N'SecondName';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Имя' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstitution', @level2type=N'COLUMN',@level2name=N'FirstName';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Отчество' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstitution', @level2type=N'COLUMN',@level2name=N'MiddleName';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Дата рождения' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstitution', @level2type=N'COLUMN',@level2name=N'BirthDate';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Примечание' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstitution', @level2type=N'COLUMN',@level2name=N'Comment';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Признак удаления клиента (1 - клиент удален)' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tInstitution', @level2type=N'COLUMN',@level2name=N'IsDelete';
+]]></string>
+		</script>
 		<script name="tOrganizationUnit" id="Editor_39a93f5" language="SQL" >
 			<string><![CDATA[CREATE TABLE Dbo.tOrganizationUnit ( 
 	OrganizationUnitID   numeric(15,0) NOT NULL   IDENTITY,
@@ -575,6 +728,39 @@ exec sp_addextendedproperty  @name=N'MS_Description', @value=N'поле обес
 
 exec sp_addextendedproperty  @name=N'MS_Description', @value=N'поле обеспечивающе темпоральность' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tOrganizationUnit', @level2type=N'COLUMN',@level2name=N'SysEndTime';]]></string>
 		</script>
+		<script name="tOrganizationUnit_001" id="Editor_1c50c02" language="SQL" >
+			<string><![CDATA[CREATE TABLE Dbo.tOrganizationUnit ( 
+	OrganizationUnitID   pkey NOT NULL   IDENTITY,
+	ParentID             pkey    ,
+	Name                 nvarchar(255) NOT NULL   ,
+	SysStartTime         datetime2    ,
+	SysEndTime           datetime2    ,
+	CONSTRAINT Pk_tOrganizationUnit_OrganizationUnitID PRIMARY KEY  ( OrganizationUnitID )
+ );
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'список подразделений - темпоральная' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tOrganizationUnit';;
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'вышестоящее подразделение' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tOrganizationUnit', @level2type=N'COLUMN',@level2name=N'ParentID';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Наименование подразделения' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tOrganizationUnit', @level2type=N'COLUMN',@level2name=N'Name';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'поле обеспечивающе темпоральность' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tOrganizationUnit', @level2type=N'COLUMN',@level2name=N'SysStartTime';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'поле обеспечивающе темпоральность' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tOrganizationUnit', @level2type=N'COLUMN',@level2name=N'SysEndTime';
+]]></string>
+		</script>
+		<script name="tStatus" id="Editor_fdc80a" language="SQL" >
+			<string><![CDATA[CREATE TABLE Dbo.tStatus ( 
+	StatusID             tinyint NOT NULL   IDENTITY,
+	Description          nvarchar(100) NOT NULL   ,
+	CONSTRAINT Pk_tStatus_StatusID PRIMARY KEY  ( StatusID )
+ );
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Статусы сотрудников' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tStatus';;
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Описание статуса' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tStatus', @level2type=N'COLUMN',@level2name=N'Description';
+]]></string>
+		</script>
 		<script name="tTypeAddress" id="Editor_fff650" language="SQL" >
 			<string><![CDATA[CREATE TABLE Dbo.tTypeAddress ( 
 	TypeAddressID        numeric(15,0) NOT NULL   IDENTITY,
@@ -586,6 +772,18 @@ exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Справочн�
 
 exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Название типа адреса' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeAddress', @level2type=N'COLUMN',@level2name=N'Name';]]></string>
 		</script>
+		<script name="tTypeAddress_001" id="Editor_5bbcb76" language="SQL" >
+			<string><![CDATA[CREATE TABLE Dbo.tTypeAddress ( 
+	TypeAddressID        pkey NOT NULL   IDENTITY,
+	Name                 nvarchar(50) NOT NULL   ,
+	CONSTRAINT Pk_tTypeAddress_tTypeAddress PRIMARY KEY  ( TypeAddressID )
+ );
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Справочник типов адресов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeAddress';;
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Название типа адреса' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeAddress', @level2type=N'COLUMN',@level2name=N'Name';
+]]></string>
+		</script>
 		<script name="tTypeContact" id="Editor_3569a8a" language="SQL" >
 			<string><![CDATA[CREATE TABLE Dbo.tTypeContact ( 
 	TypeContactID        numeric(15,0) NOT NULL   IDENTITY,
@@ -596,6 +794,18 @@ exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Название 
 exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Справочник типов контактов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeContact';;
 
 exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Наименование типа контакта' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeContact', @level2type=N'COLUMN',@level2name=N'ContactName';]]></string>
+		</script>
+		<script name="tTypeContact_001" id="Editor_52f32d4" language="SQL" >
+			<string><![CDATA[CREATE TABLE Dbo.tTypeContact ( 
+	TypeContactID        pkey NOT NULL   IDENTITY,
+	ContactName          nvarchar(100) NOT NULL   ,
+	CONSTRAINT Pk_tTypeContact_TypeContactID PRIMARY KEY  ( TypeContactID )
+ );
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Справочник типов контактов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeContact';;
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Наименование типа контакта' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeContact', @level2type=N'COLUMN',@level2name=N'ContactName';
+]]></string>
 		</script>
 		<script name="tTypeDoc" id="Editor_1100eb9" language="SQL" >
 			<string><![CDATA[CREATE TABLE Dbo.tTypeDoc ( 
@@ -636,6 +846,27 @@ exec sp_addextendedproperty  @name=N'MS_Description', @value=N'маска вво
 exec sp_addextendedproperty  @name=N'MS_Description', @value=N'маска ввода номера документа' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeDoc', @level2type=N'COLUMN',@level2name=N'MaskNumber';
 
 exec sp_addextendedproperty  @name=N'MS_Description', @value=N'дополнительный номер документа (например код подразделения в паспорте)' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeDoc', @level2type=N'COLUMN',@level2name=N'MaskDopNumber1';]]></string>
+		</script>
+		<script name="tTypeDoc_002" id="Editor_9f1293" language="SQL" >
+			<string><![CDATA[CREATE TABLE Dbo.tTypeDoc ( 
+	TypeDocID            pkey NOT NULL   ,
+	Name                 nvarchar(100)    ,
+	MaskSeries           nvarchar(30)    ,
+	MaskNumber           nvarchar(150)    ,
+	MaskDopNumber1       nvarchar(150)    ,
+	CONSTRAINT Pk_tTypeDoc_TypeDocID PRIMARY KEY  ( TypeDocID )
+ );
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Справочник типов документов' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeDoc';;
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Название документа' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeDoc', @level2type=N'COLUMN',@level2name=N'Name';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'маска ввода серии документа' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeDoc', @level2type=N'COLUMN',@level2name=N'MaskSeries';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'маска ввода номера документа' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeDoc', @level2type=N'COLUMN',@level2name=N'MaskNumber';
+
+exec sp_addextendedproperty  @name=N'MS_Description', @value=N'дополнительный номер документа (например код подразделения в паспорте)' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeDoc', @level2type=N'COLUMN',@level2name=N'MaskDopNumber1';
+]]></string>
 		</script>
 	</layout>
 </project>
