@@ -1,3 +1,4 @@
+
 --1.Создадим новую файловую группу, для архивных данных
 
 ALTER DATABASE [WideWorldImporters] ADD FILEGROUP [ArcDateWWI]
