@@ -1,9 +1,9 @@
 CREATE DATABASE [OtusDb]
  CONTAINMENT = NONE
  ON  PRIMARY 
-( NAME = N'bd', FILENAME = N'D:\SQL2014\DATA\OtusDb.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
+( NAME = N'bd', FILENAME = N'C:\Обучение\otus-mssql-201907-Khlyudinsky\Project\OtusDb.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
  LOG ON 
-( NAME = N'bd_log', FILENAME = N'D:\SQL2014\LOG\OtusDb.ldf' , SIZE = 8192KB , MAXSIZE = 10485760KB , FILEGROWTH = 65536KB )
+( NAME = N'bd_log', FILENAME = N'C:\Обучение\otus-mssql-201907-Khlyudinsky\Project\OtusDb.ldf' , SIZE = 8192KB , MAXSIZE = 10485760KB , FILEGROWTH = 65536KB )
 GO
 Use [OtusDb]
 --------------------------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Справочн�
 exec sp_addextendedproperty  @name=N'MS_Description', @value=N'Наименование типа контакта' , @level0type=N'SCHEMA',@level0name=N'Dbo', @level1type=N'TABLE',@level1name=N'tTypeContact', @level2type=N'COLUMN',@level2name=N'ContactName';
 --------------------------------------------------------------------------------------------------
 CREATE TABLE Dbo.tCltContact ( 
-	CltContactID        int NOT NULL   IDENTITY,
+	CltContactID    pkey NOT NULL   IDENTITY,
 	ClientID        pkey NOT NULL   ,
 	TypeContactID        int  ,
 	Contact              nvarchar(100) NOT NULL   ,
@@ -389,7 +389,7 @@ DECLARE @RetVal int = 0,
         @AuditComment nvarchar(4000)
 SET NOCOUNT ON;
 
-SELECT @AuditComment = 'TypeAddressID = ' + CONVERT(VARCHAR(10),TypeAddressID) +', Address = ' + Address + ', Flag = ' + CONVERT(VARCHAR(1),Flag) 
+SELECT @AuditComment = 'TypeAddressID = ' + ISNULL(CONVERT(VARCHAR(10),TypeAddressID),'NULL') +', Address = ' + ISNULL(Address,'NULL') + ', Flag = ' + ISNULL(CONVERT(VARCHAR(1),Flag),'NULL') 
 FROM dbo.tCltAddress
 WHERE CltAddressID = @CltAddressID
   BEGIN TRY
@@ -430,7 +430,9 @@ AS
 DECLARE @RetVal int = 0,
         @AuditComment nvarchar(4000)
 SET NOCOUNT ON;
-SELECT @AuditComment = 'Brief = ' + Brief +', SecondName = ' + SecondName + ', FirstName ' + FirstName + ', MiddleName ' + MiddleName  + ', BirthDate = ' + CONVERT(VARCHAR(10),BirthDate) 
+
+SELECT @AuditComment = 'Brief = ' + ISNULL(Brief,'NULL') +', SecondName = ' + ISNULL(SecondName,'NULL') + ', FirstName ' + ISNULL(FirstName,'NULL') + ', MiddleName ' + ISNULL(MiddleName,'NULL')  + ', BirthDate = ' + ISNULL(CONVERT(VARCHAR(10),BirthDate),'NULL') 
+
 FROM dbo.tClient
 WHERE ClientID = @ClientID
   BEGIN TRY
@@ -479,15 +481,15 @@ DECLARE @RetVal int = 0,
 SET NOCOUNT ON;
 
 SELECT @AuditComment = 'TypeDocID = ' + 
-       CONVERT(VARCHAR(10),TypeDocID) +
-	   ', Series = ' + Series + 
-	   ', Number = ' + Number + 
-	   ', Organization = ' + Organization + 
-	   ', DateStart = ' + CONVERT(VARCHAR(10),DateStart) + 
-	   ', DateEnd = ' + CONVERT(VARCHAR(10),DateEnd) + 
-	   ', DopNumber = ' + DopNumber + 
-	   ', Series = ' + Series +
-	   ', Flag = ' + CONVERT(VARCHAR(1),Flag) 
+       ISNULL(CONVERT(VARCHAR(10),TypeDocID),'NULL') +
+	   ', Series = ' + ISNULL(Series,'NULL') + 
+	   ', Number = ' + ISNULL(Number,'NULL') + 
+	   ', Organization = ' + ISNULL(Organization,'NULL') + 
+	   ', DateStart = ' + ISNULL(CONVERT(VARCHAR(10),DateStart),'NULL') + 
+	   ', DateEnd = ' + ISNULL(CONVERT(VARCHAR(10),DateEnd),'NULL') + 
+	   ', DopNumber = ' + ISNULL(DopNumber,'NULL') + 
+	   ', Series = ' + ISNULL(Series,'NULL') +
+	   ', Flag = ' + ISNULL(CONVERT(VARCHAR(1),Flag),'NULL') 
 FROM dbo.tCltLicense
 WHERE CltLicenseID = @CltLicenseID
   BEGIN TRY
@@ -530,7 +532,7 @@ DECLARE @RetVal int = 0,
         @AuditComment nvarchar(4000)
 SET NOCOUNT ON;
 
-SELECT @AuditComment = 'TypeContactID = ' + CONVERT(VARCHAR(10),TypeContactID) +', Contact = ' + Contact
+SELECT @AuditComment = 'TypeContactID = ' + ISNULL(CONVERT(VARCHAR(10),TypeContactID),'NULL') +', Contact = ' + ISNULL(Contact,'NULL')
 FROM dbo.tCltContact
 WHERE CltContactID = @CltContactID
   BEGIN TRY
@@ -737,6 +739,7 @@ FROM org.tEmployee e
   LEFT JOIN dbo.tTypeContact tc ON tc.TypeContactID = cc.TypeContactID
 WHERE isnull(tc.ContactName,N'Сотовый телефон') = N'Сотовый телефон'
 ------------------------------------------------------------------------
+GO
 CREATE VIEW org.vwOrganizationStruct
 AS   
 WITH OUnit AS
@@ -756,6 +759,142 @@ SELECT Level,
 	   hierarchy
 FROM OUnit
 ------------------------------------------------------------------------
+-----------------------------------------------------------------------------------
+GO
+CREATE PROCEDURE org.tOrganizationUnitDelete
+	@OrganizationUnitID        pkey
+AS
+DECLARE @RetVal int = 0
+SET NOCOUNT ON;
+
+  BEGIN TRY
+    BEGIN TRANSACTION
+    DELETE org.tOrganizationUnit WHERE OrganizationUnitID = @OrganizationUnitID
+	IF @@rowcount > 0
+	  EXEC @RetVal = log.tAuditInsert 
+	     @ObjectID = @OrganizationUnitID,
+		 @Action = N'Удалить',
+		 @ObjectName = 'tOrganizationUnit',
+		 @Comment = ''
+    IF @RetVal <> 0
+      ROLLBACK TRANSACTION;
+    ELSE
+      COMMIT;    
+  END TRY
+  BEGIN CATCH
+    ROLLBACK TRANSACTION
+    SET @RetVal=ERROR_NUMBER()
+  END CATCH
+Return @RetVal
+GO
+
+CREATE PROCEDURE org.tEmployeeDelete
+	@EmployeeID        pkey
+AS
+DECLARE @RetVal int = 0
+SET NOCOUNT ON;
+
+  BEGIN TRY
+    BEGIN TRANSACTION
+    DELETE org.tEmployee WHERE EmployeeID = @EmployeeID
+	IF @@rowcount > 0
+	  EXEC @RetVal = log.tAuditInsert 
+	     @ObjectID = @EmployeeID,
+		 @Action = N'Удалить',
+		 @ObjectName = 'tEmployee',
+		 @Comment = ''
+    IF @RetVal <> 0
+      ROLLBACK TRANSACTION;
+    ELSE
+      COMMIT;    
+  END TRY
+  BEGIN CATCH
+    ROLLBACK TRANSACTION
+    SET @RetVal=ERROR_NUMBER()
+  END CATCH
+Return @RetVal
+GO
+----------------------------------------------------------------------------------
+CREATE PROCEDURE org.tOrganizationUnitUpdate
+	@OrganizationUnitID   pkey,
+	@ParentID             pkey = NULL,
+	@Name                 nvarchar(255) = NULL
+AS
+DECLARE @RetVal int = 0,
+        @AuditComment nvarchar(4000)
+SET NOCOUNT ON;
+
+SELECT @AuditComment = 'ParentID = ' + ISNULL(CONVERT(VARCHAR(10),ParentID),'NULL') +', Name = ' + ISNULL(Name,'NULL')
+FROM org.tOrganizationUnit
+WHERE OrganizationUnitID = @OrganizationUnitID
+  BEGIN TRY
+    BEGIN TRANSACTION
+    UPDATE org.tOrganizationUnit
+	  SET ParentID = isnull(@ParentID,ParentID), 
+          Name = isnull(@Name,Name) 
+    WHERE OrganizationUnitID = @OrganizationUnitID
+	IF @@rowcount > 0
+	  EXEC @RetVal = log.tAuditInsert 
+	     @ObjectID = @OrganizationUnitID,
+		 @Action = N'Изменить',
+		 @ObjectName = 'tOrganizationUnit',
+		 @Comment = @AuditComment
+    IF @RetVal <> 0
+      ROLLBACK TRANSACTION;
+    ELSE
+      COMMIT;    
+  END TRY
+  BEGIN CATCH
+    ROLLBACK TRANSACTION
+    SET @RetVal=ERROR_NUMBER()
+  END CATCH
+Return @RetVal
+GO
+-------------------------------------------------------------------------------
+CREATE PROCEDURE org.tEmployeeUpdate
+	@EmployeeID   pkey,
+	@TabNumber     nvarchar(15) = NULL,
+	@OrganizationUnitID pkey = NULL,
+	@ClientID      pkey = NULL,
+	@StatusID      tinyint = NULL
+AS
+DECLARE @RetVal int = 0,
+        @AuditComment nvarchar(4000)
+SET NOCOUNT ON;
+
+SELECT @AuditComment = 'TabNumber = ' + ISNULL(TabNumber,'NULL') +
+                       ', OrganizationUnitID = ' + ISNULL(CONVERT(VARCHAR(10),OrganizationUnitID),'NULL') + 
+                       ', ClientID = ' + ISNULL(CONVERT(VARCHAR(10),ClientID),'NULL') + 
+                       ', StatusID = ' + ISNULL(CONVERT(VARCHAR(10),StatusID),'NULL') 
+FROM org.tEmployee
+WHERE EmployeeID = @EmployeeID
+  BEGIN TRY
+    BEGIN TRANSACTION
+    UPDATE org.tEmployee
+	  SET TabNumber = isnull(@TabNumber,TabNumber), 
+          OrganizationUnitID = isnull(@OrganizationUnitID,OrganizationUnitID),
+		  ClientID = isnull(@ClientID,ClientID),
+		  StatusID = isnull(@StatusID,StatusID)
+    WHERE EmployeeID = @EmployeeID
+	IF @@rowcount > 0
+	  EXEC @RetVal = log.tAuditInsert 
+	     @ObjectID = @EmployeeID,
+		 @Action = N'Изменить',
+		 @ObjectName = 'tEmployee',
+		 @Comment = @AuditComment
+    IF @RetVal <> 0
+      ROLLBACK TRANSACTION;
+    ELSE
+      COMMIT;    
+  END TRY
+  BEGIN CATCH
+    ROLLBACK TRANSACTION
+    SET @RetVal=ERROR_NUMBER()
+  END CATCH
+Return @RetVal
+GO
+
+
 
 
 ----------------------------------------------------------------------------------------------------------------------------
